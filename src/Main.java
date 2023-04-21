@@ -3,7 +3,6 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.Scanner;
 
-
 public class Main {
     public static Scanner scanner;
     public static Random rnd;
@@ -102,9 +101,7 @@ public class Main {
             System.out.println("Battleship overlaps another battleship, try again!");
             return false;
         }
-        if(){
 
-        }
         return true;
     }
 
@@ -114,20 +111,19 @@ public class Main {
      * and if so addes the ship to the board accordenly
      * #output: void
      */
-    public static void add_ships_to_board(char[][] boardgame, int[][] ship_array, int n, int m){
+
+    public static void add_ships_to_board(char[][] boardgame, int[] ship_array, int n, int m){
         for (int i=0 ; i< ship_array.length ; i++){
-            if (ship_array[i].equals(0)){
-                int j = 0;
-                while(!ship_array[i].equals(0)){
+            if (!(ship_array[i] == 0)){
+                for(int j=0; j < ship_array[i]; j++) {//insert the location of the ships in the same sizes
                     System.out.println("Enter location and orientation for battleship of size s");
                     int x= scanner.nextInt();
                     int y= scanner.nextInt();
                     int ori= scanner.nextInt();
-
-                    if(is_valid_board_location(boardgame,n,m,x,y,ori,(int)ship_array[i]))
-                        locate_battleship();
+                    //check if possible and puts the sips on the board if so
+                    if(is_valid_board_location(boardgame, n, m, x, y, ori, i))
+                        locate_battleship(boardgame,x,y,ori, i); //put the ships in the right place
                 }
-
             }
         }
 
@@ -195,7 +191,7 @@ public class Main {
 
     }
     public static void main(String[] args) throws IOException {
-        /**String path = "C:\\Users\\hilal\\IdeaProjects\\HW0_324075548_\\src\\HW0_input.txt";
+        String path = args[0];
         scanner = new Scanner(new File(path));
         int numberOfGames = scanner.nextInt();
         scanner.nextLine();
@@ -213,12 +209,11 @@ public class Main {
             System.out.println("------------------------------------------------------------");
         }
         System.out.println("All games are over.");
-**/
-        battleshipGame();
-
-
     }
+
+
 }
+
 
 
 
