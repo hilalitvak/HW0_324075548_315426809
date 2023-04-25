@@ -23,6 +23,8 @@ public class Main {
      */
     public static boolean is_ships_crashing(char[][] board,int x, int y, int ori, int ship_len, int rBoard, int cBoard){
         if(ori == 1){
+            if(y < 0 || y >= cBoard)
+                return true;
             if(x < 0)
                 x+=1;
             for (int row = x; row < min(rBoard,x+ship_len); row++){
@@ -31,6 +33,8 @@ public class Main {
             }
         }
         else {
+            if(x < 0 || x >= rBoard)
+                return true;
             if(y< 0)
                 y+=1;
             for(int col=y ; col < min(y+ship_len, cBoard); col++){
@@ -87,11 +91,11 @@ public class Main {
             System.out.println("Illegal orientation, try again!");
             return false;
         }
-        if(x > row || x < 0 || y > col || y<0 ){
+        if(x >= row || x < 0 || y >= col || y < 0 ){
             System.out.println("Illegal tile, try again!");
             return false;
         }
-        if((ori == 0 && y+ship_len-1 > col) || (ori==1 && x+ship_len-1 > row)){
+        if((ori == 0 && y+ship_len-1 >= col) || (ori==1 && x+ship_len-1 >= row)){
             System.out.println("Battleship exceeds the boundaries of the board, try again!");
             return false;
         }
@@ -137,10 +141,10 @@ public class Main {
      */
     public static void add_ships_to_board(char[][] boardgame, int[] ship_array, int n, int m){
         create_board(boardgame,n,m);
-        for (int i=0 ; i< ship_array.length ; i++){
+        for (int i=1 ; i< ship_array.length ; i++){//i == length of the ship
             if (!(ship_array[i] == 0)){
                 for(int j=0; j < ship_array[i]; j++) {//insert the location of the ships in the same sizes
-                    System.out.println("Enter location and orientation for battleship of size s");
+                    System.out.println("Enter location and orientation for battleship of size " + i);
                     String s= scanner.nextLine();
                     s = s.replaceAll(",", ""); // remove parentheses and comma
                     String[] parts = s.split("\\s+"); // split into three parts
@@ -148,8 +152,15 @@ public class Main {
                     int y= Integer.parseInt(parts[1]);
                     int ori= Integer.parseInt(parts[2]);
                     //check if possible and puts the sips on the board if so
-                    if(is_valid_board_location(boardgame, n, m, x, y, ori, i))
-                        locate_battleship(boardgame,x,y,ori, i); //put the ships in the right place
+                    while(!is_valid_board_location(boardgame, n, m, x, y, ori, i)){
+                        s= scanner.nextLine();
+                        s = s.replaceAll(",", ""); // remove parentheses and comma
+                        parts = s.split("\\s+"); // split into three parts
+                        x= Integer.parseInt(parts[0]);
+                        y= Integer.parseInt(parts[1]);
+                        ori= Integer.parseInt(parts[2]);
+                    }
+                    locate_battleship(boardgame,x,y,ori, i); //put the ships in the right place
                 }
             }
         }
@@ -163,10 +174,9 @@ public class Main {
      */
     public static void add_ships_to_board_computer(char[][] boardgame, int[] ship_array, int n, int m){
         create_board(boardgame,n,m);
-        for (int i=0 ; i< ship_array.length ; i++){
+        for (int i=1 ; i< ship_array.length ; i++){
             if (!(ship_array[i] == 0)){
                 for(int j=0; j < ship_array[i]; j++) {//insert the location of the ships in the same sizes
-                    System.out.println("Enter location and orientation for battleship of size"+j);
                     int x= rnd.nextInt(n);
                     int y= rnd.nextInt(m);
                     int ori= rnd.nextInt(2);
@@ -209,6 +219,9 @@ public class Main {
     public static int input_ships(char[][] player_board, char [][] computer_board, int n, int m){
         System.out.println("Enter the battleships sizes");
         String ships = scanner.nextLine();
+        System.out.println("Your current game board:");
+        print_Board(player_board,n,m);
+        System.out.println();
         String[] ship_pairs = ships.split(" "); //split the string to pairs
         int maxIndex = Integer.parseInt(ship_pairs[ship_pairs.length - 1].split("X")[1]);
         int number_of_ships=0;
@@ -218,7 +231,7 @@ public class Main {
             int num_of_ship = Integer.parseInt(values[0]);
             int size_ship = Integer.parseInt(values[1]);
             ship_array[size_ship] = num_of_ship;
-            num_of_ship+=num_of_ship;
+            number_of_ships+=num_of_ship;
         }
         add_ships_to_board(player_board,ship_array,n,m);// player locates his ships
         add_ships_to_board_computer(computer_board,ship_array,n,m);//random location and input to computer boardgame
@@ -231,7 +244,7 @@ public class Main {
      */
     public static boolean check_tile_to_attack(char[][] player_board, char[][] guessing_board, int x,
                                                int y, int n, int m){
-        if(x < 0 || x > n || y < 0 || y > m) {
+        if(x < 0 || x >= n || y < 0 || y >= m) {
             System.out.println("Illegal tile, try again!");
             return false;
         }
@@ -242,42 +255,125 @@ public class Main {
         return true;
     }
 
+    public static boolean valid_com_guess(char[][] player_board, char[][] guessing_board, int x,
+                                          int y, int n, int m){
+        if(x < 0 || x > n || y < 0 || y > m) {
+            return false;
+        }
+        if(!(guessing_board[x][y] == '–')){
+            return false;
+        }
+        return true;
+    }
+    /**#check if the ship drown
+     * #input: player board, (x,y)
+     * return if the whole ship is XXX true ele false
+     */
+    public static boolean is_ship_drown(char[][] player_board, int x, int y, int n, int m){
+        int i=0, j=0;
+        while(i+x < n && player_board[x+i][y] != '–'){ //right
+            if(player_board[x+i][y] == '#'){
+                return false;
+            }
+            i++;
+        }
+        i=0;
+        while(x-i >= 0 && player_board[x-i][y] != '–'){//left
+            if(player_board[x-i][y] == '#'){
+                return false;
+            }
+            i++;
+        }
+        //up and down
+        while (y-j >=0 && player_board[x][y-j]!='–'){
+            if(player_board[x][y-j] =='#')
+                return false;
+            j++;
+        }
+        j=0;
+        while (y+j < m && player_board[x][y+j]!='–'){
+            if(player_board[x][y+j]=='#')
+                return false;
+            j++;
+        }
+        return true;
+    }
+
+    public static int attack_ship_by_computer(char[][] com_guessing_board, char [][] player_board, int n,
+                                          int m, int r) {
+        int x= rnd.nextInt(n);
+        int y= rnd.nextInt(m);;
+        while(!valid_com_guess(player_board, com_guessing_board,x,y,n,m)) {
+            x= rnd.nextInt(n);
+            y= rnd.nextInt(m);;
+        }
+        System.out.println("The computer attacked ("+x+", "+y +")");
+        if(player_board[x][y] =='#'){
+            com_guessing_board[x][y]='V';
+            player_board[x][y]='X';
+            System.out.println("That is a hit!");
+            if(is_ship_drown(player_board,x,y,n,m)){
+                r-=1;
+                System.out.println("Your battleship has been drowned, you have left "+r+" more battleships!");
+            }
+        }
+        else if(player_board[x][y]=='–'){
+            com_guessing_board[x][y]='X';
+            System.out.println("That is a miss!");
+        }
+
+        return r;
+    }
+
     /** #input: the current gues, board to attck and the guessing board
      *  do the attack and update boards
      */
-    public static void attack_f_ship(char[][] player_board,char[][] guessing, int x, int y, int n, int m){
-        if(player_board[x][y]=='X'){
+    public static int attack_f_ship(char[][] player_board,char[][] guessing, int x, int y, int n, int m, int r){
+        if(player_board[x][y]=='#'){
             System.out.println("That is a hit!");
             guessing[x][y]='V';
             player_board[x][y]='X';
-        }
+            if(is_ship_drown(player_board,x,y,n,m)){
+                r-=1;
+                System.out.println("The computer's battleship has been drowned, "+ r + " more ships to go!");
+                System.out.println("For making sure, computer game board");
+                print_Board(player_board,n,m);
+                System.out.println();
+            }
+            else {
+                System.out.println("For making sure, computer game board");
+                print_Board(player_board, n, m);
+                System.out.println();
+            }
+        }//big if
         if(player_board[x][y]=='–'){
             System.out.println("That is a miss!");
             guessing[x][y]='X';
         }
+        return r;
+
     }
     /**#input: guessing board, the computer board, size of the board, r is number of ships of the user
      * the func asks the user for guesses and checks the validation of the guess
      * if so then does the attack on the computer ship
      * update the boards as well */
-    public static void attack_ship_by_user(char[][] player_guessing_board, char [][] computer_board, int n,
+    public static int attack_ship_by_user(char[][] player_guessing_board, char [][] computer_board, int n,
                                            int m, int r){
-        System.out.println("Your current guessing board:");
+        System.out.println("\nYour current guessing board:");
         print_Board(player_guessing_board, n,m);//print the guess board
+        System.out.println();
         System.out.println("Enter a tile to attack");
         String guess= scanner.nextLine();
         String[] pair= guess.split(", ");
         int x= Integer.parseInt(pair[0]);
         int y= Integer.parseInt(pair[1]);
         while(!check_tile_to_attack(computer_board, player_guessing_board,x,y,n,m)) {
-            System.out.println("Enter a tile to attack");
             guess= scanner.nextLine();
             pair= guess.split(", ");
             x= Integer.parseInt(pair[0]);
             y= Integer.parseInt(pair[1]);
         }
-        attack_f_ship(computer_board,player_guessing_board,x,y,n,m);
-
+        return attack_f_ship(computer_board,player_guessing_board,x,y,n,m,r);
     }
 
     /** start of the game
@@ -286,27 +382,39 @@ public class Main {
     public static void battleshipGame() {
         System.out.println("Enter the board size");
         String MXN_board= scanner.nextLine();//get number of rows from user
-        int n= Integer.parseInt(MXN_board.substring(0,1));
-        int m= Integer.parseInt(MXN_board.substring(2,3));
+        String[] pair= MXN_board.split("X");
+        int n= Integer.parseInt(pair[0]);
+        int m= Integer.parseInt(pair[1]);
         char[][] player_board= new char[n][m]; //declare the board game of player
         char[][] computer_board= new char[n][m]; //declare the board games of com
+        create_board(player_board,n,m);
         int num_ships = input_ships(player_board, computer_board,n,m); //enter ships and locate on both boards
-        System.out.println("the player board is: ");
+        System.out.println("Your current game board:");
         print_Board(player_board,n,m);
-        System.out.println("the computer board is: ");
-        print_Board(computer_board,n,m);
-        char[][] start_board_player=player_board.clone(); //saves the first boards before the attacks
-        char[][] start_board_com= computer_board.clone(); //saves the first boards before the attacks
         char[][] player_guess= new char[n][m]; //declare the guessing boards of both players
         char[][] computer_guess= new char[n][m]; //declare the guessing boards of both players
         create_board(player_guess,n,m);//create the guessing board
         create_board(computer_guess,n,m); //create the guessing board
-        int num_player=num_ships;
-        int num_cop= num_ships;
-        attack_ship_by_user(player_guess,computer_board,n,m,num_cop);
+        int num_player=num_ships;//how much left for player
+        int num_cop= num_ships;//how much left for computer
 
-
-
+        while(!(num_cop == 0) && !(num_player ==0)) {
+            num_cop = attack_ship_by_user(player_guess, computer_board, n, m, num_cop);
+            if(num_cop == 0){
+                System.out.println("You won the game!");
+                return;
+            }
+            num_player = attack_ship_by_computer(computer_guess, player_board, n, m, num_player);
+            if(num_player==0){
+                System.out.println("Your current game board: ");
+                print_Board(player_board, n, m);
+                System.out.println();
+                System.out.println("You lost ):");
+                return;
+            }
+            System.out.println("\nYour current game board: ");
+            print_Board(player_board, n, m);
+        }
     }
     public static void main(String[] args) throws IOException {
         String path = args[0];
