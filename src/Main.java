@@ -86,31 +86,36 @@ public class Main {
      * checks if the ship doesn't crash other ship
      * #output: true if valid location else false
      */
-    public static boolean is_valid_board_location(char[][] board, int row, int col, int x, int y, int ori, int ship_len){
+    public static boolean is_valid_board_location(char[][] board, int row, int col, int x, int y, int ori, int ship_len
+                ,boolean is_com){
         if (!(ori==0||ori==1)){
-            System.out.println("Illegal orientation, try again!");
+            if(!is_com)
+                System.out.println("Illegal orientation, try again!");
             return false;
         }
         if(x >= row || x < 0 || y >= col || y < 0 ){
-            System.out.println("Illegal tile, try again!");
+            if(!is_com)
+                System.out.println("Illegal tile, try again!");
             return false;
         }
         if((ori == 0 && y+ship_len-1 >= col) || (ori==1 && x+ship_len-1 >= row)){
-            System.out.println("Battleship exceeds the boundaries of the board, try again!");
+            if(!is_com)
+                System.out.println("Battleship exceeds the boundaries of the board, try again!");
             return false;
         }
         if(!is_ships_crashing(board,x,y,ori, ship_len, row, col)){
-            System.out.println("Battleship overlaps another battleship, try again!");
+            if(!is_com)
+                System.out.println("Battleship overlaps another battleship, try again!");
             return false;
         }
-        //checks is the ship has any ships near it
-        if(ori==0 && !is_ships_crashing_ghost_hor(board,x,y,ship_len,row,col)){
-            System.out.println("Adjacent battleship detected, try again!");
+        if(ori==0 && !is_ships_crashing_ghost_hor(board,x,y,ship_len,row,col)){//checks is the ship has any ships near
+            if(!is_com)
+                System.out.println("Adjacent battleship detected, try again!");
             return false;
         }
-        //checks is the ship has any ships near it
-        if(ori==1 && !is_ships_crashing_ghost_ver(board,x,y,ship_len,row,col)){
-            System.out.println("Adjacent battleship detected, try again!");
+        if(ori==1 && !is_ships_crashing_ghost_ver(board,x,y,ship_len,row,col)){//checks is the ship has any ships near
+            if(!is_com)
+                System.out.println("Adjacent battleship detected, try again!");
             return false;
         }
         return true;
@@ -142,6 +147,7 @@ public class Main {
     public static void add_ships_to_board(char[][] boardgame, int[] ship_array, int n, int m){
         create_board(boardgame,n,m);
         for (int i=1 ; i< ship_array.length ; i++){//i == length of the ship
+            //System.out.println("^"+ship_array[i]+"\n");
             if (!(ship_array[i] == 0)){
                 for(int j=0; j < ship_array[i]; j++) {//insert the location of the ships in the same sizes
                     System.out.println("Enter location and orientation for battleship of size " + i);
@@ -152,7 +158,8 @@ public class Main {
                     int y= Integer.parseInt(parts[1]);
                     int ori= Integer.parseInt(parts[2]);
                     //check if possible and puts the sips on the board if so
-                    while(!is_valid_board_location(boardgame, n, m, x, y, ori, i)){
+                    //System.out.println("\n^^^\n");
+                    while(!is_valid_board_location(boardgame, n, m, x, y, ori, i, false)){
                         s= scanner.nextLine();
                         s = s.replaceAll(",", ""); // remove parentheses and comma
                         parts = s.split("\\s+"); // split into three parts
@@ -161,7 +168,9 @@ public class Main {
                         ori= Integer.parseInt(parts[2]);
                     }
                     locate_battleship(boardgame,x,y,ori, i); //put the ships in the right place
-                }
+                    System.out.println("Your current game board:");
+                    print_Board(boardgame,n,m);
+                }//if of ships in the same sizes
             }
         }
     }
@@ -181,7 +190,7 @@ public class Main {
                     int y= rnd.nextInt(m);
                     int ori= rnd.nextInt(2);
                     //check if possible and puts the sips on the board if so
-                    while(!is_valid_board_location(boardgame,n,m,x,y,ori,i) ){
+                    while(!is_valid_board_location(boardgame,n,m,x,y,ori,i,true) ){
                         x= rnd.nextInt(n);
                         y= rnd.nextInt(m);
                         ori= rnd.nextInt(2);
@@ -198,17 +207,24 @@ public class Main {
      * the funtion prints the diff boards */
     public static void print_Board(char[][] board, int row, int col){
         System.out.print("  ");
-        for(int p=0; p< col;p++)
-            System.out.print(p+" ");//print first row of 0 1 2...
+        for(int p=0; p< col;p++) {
+            if (row >= 10 && p==0)
+                System.out.print(" ");
+            System.out.print(p + " ");//print first row of 0 1 2...
+        }
         System.out.println();
 
         for(int i=0; i < row; i++){
+            if(row >=10 && i<10){
+                System.out.print(" ");
+            }
             System.out.print(i+ " ");//print first col 0 1 2...
             for(int j=0; j < col; j++){
                 System.out.print(board[i][j]+" "); // print internal board -,X...
             }
             System.out.println();
         }
+        System.out.println();
     }//end
 
     /**
@@ -221,7 +237,6 @@ public class Main {
         String ships = scanner.nextLine();
         System.out.println("Your current game board:");
         print_Board(player_board,n,m);
-        System.out.println();
         String[] ship_pairs = ships.split(" "); //split the string to pairs
         int maxIndex = Integer.parseInt(ship_pairs[ship_pairs.length - 1].split("X")[1]);
         int number_of_ships=0;
@@ -335,15 +350,13 @@ public class Main {
             player_board[x][y]='X';
             if(is_ship_drown(player_board,x,y,n,m)){
                 r-=1;
-                System.out.println("The computer's battleship has been drowned, "+ r + " more ships to go!");
+                System.out.println("The computer's battleship has been drowned, "+ r + " more battleships to go!");
                 System.out.println("For making sure, computer game board");
                 print_Board(player_board,n,m);
-                System.out.println();
             }
             else {
                 System.out.println("For making sure, computer game board");
                 print_Board(player_board, n, m);
-                System.out.println();
             }
         }//big if
         if(player_board[x][y]=='–'){
@@ -359,9 +372,8 @@ public class Main {
      * update the boards as well */
     public static int attack_ship_by_user(char[][] player_guessing_board, char [][] computer_board, int n,
                                            int m, int r){
-        System.out.println("\nYour current guessing board:");
+        System.out.println("Your current guessing board:");
         print_Board(player_guessing_board, n,m);//print the guess board
-        System.out.println();
         System.out.println("Enter a tile to attack");
         String guess= scanner.nextLine();
         String[] pair= guess.split(", ");
@@ -389,8 +401,6 @@ public class Main {
         char[][] computer_board= new char[n][m]; //declare the board games of com
         create_board(player_board,n,m);
         int num_ships = input_ships(player_board, computer_board,n,m); //enter ships and locate on both boards
-        System.out.println("Your current game board:");
-        print_Board(player_board,n,m);
         char[][] player_guess= new char[n][m]; //declare the guessing boards of both players
         char[][] computer_guess= new char[n][m]; //declare the guessing boards of both players
         create_board(player_guess,n,m);//create the guessing board
@@ -406,13 +416,12 @@ public class Main {
             }
             num_player = attack_ship_by_computer(computer_guess, player_board, n, m, num_player);
             if(num_player==0){
-                System.out.println("Your current game board: ");
+                System.out.println("Your current game board:");
                 print_Board(player_board, n, m);
-                System.out.println();
                 System.out.println("You lost ):");
                 return;
             }
-            System.out.println("\nYour current game board: ");
+            System.out.println("Your current game board:");
             print_Board(player_board, n, m);
         }
     }
